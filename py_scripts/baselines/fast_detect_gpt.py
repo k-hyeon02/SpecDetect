@@ -17,36 +17,10 @@ warnings.filterwarnings('ignore')
 # os.chdir("......") # cache_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model_fullnames = {  'gptj_6b': 'gpt-j-6b', # https://huggingface.co/EleutherAI/gpt-j-6b/tree/main
-                     'gptneo_2.7b': 'gpt-neo-2.7B', # https://huggingface.co/EleutherAI/gpt-neo-2.7B/tree/main
-                     'gpt2_xl': 'gpt2-xl',# https://huggingface.co/openai-community/gpt2-xl/tree/main
-                     'opt_2.7b': 'opt-2.7b', # https://huggingface.co/facebook/opt-2.7b/tree/main
-                     'bloom_7b': 'bloom-7b1', # https://huggingface.co/bigscience/bloom-7b1/tree/main
-                     'falcon_7b': 'falcon-7b', # https://huggingface.co/tiiuae/falcon-7b/tree/main
-                     'gemma_7b': "gemma-7b", # https://huggingface.co/google/gemma-7b/tree/main
-                     'llama1_13b': 'Llama-13b', # https://huggingface.co/huggyllama/llama-13b/tree/main
-                     'llama2_13b': 'Llama-2-13B-fp16', # https://huggingface.co/TheBloke/Llama-2-13B-fp16/tree/main
-                     'llama3_8b': 'Llama-3-8B', # https://huggingface.co/meta-llama/Meta-Llama-3-8B/tree/main
-                     'opt_13b': 'opt-13b', # https://huggingface.co/facebook/opt-13b/tree/main
-                     'phi2': 'phi-2', # https://huggingface.co/microsoft/phi-2/tree/main
-                     "mgpt": 'mGPT', # https://huggingface.co/ai-forever/mGPT/tree/main
-                     'qwen1.5_7b': 'Qwen1.5-7B', # https://huggingface.co/Qwen/Qwen1.5-7B/tree/main
-                     'yi1.5_6b': 'Yi-1.5-6B',
-                      'phi-4': 'phi-4',
-                     'Qwen3-1.7B': 'Qwen3-1.7B',
-                     'Qwen3-4B': 'Qwen3-4B',
-                     'Qwen3-8B': 'Qwen3-8B',
-                      'falcon3-7b': 'falcon3-7b',
-                     'falcon3-10b': 'falcon3-10b',
-                     'gemma3-12b': 'gemma3-12b',
-                     'gemma3-1b': 'gemma3-1b',
-                     'gemma3-4b': 'gemma3-4b',
-                     'falcon3-3b': 'falcon3-3b'} # https://huggingface.co/01-ai/Yi-1.5-6B/tree/main 
+from model_config import model_fullnames
 
 def load_model(model_name):
     model_fullname = model_fullnames[model_name]
-    model_path = "pretrain_models/" + model_fullname
-
     print(f'Loading model {model_fullname}...')
     model_kwargs = {}
     if model_name in ['gptj_6b', 'llama1_13b', 'llama2_13b', 'llama3_8b', 'falcon_7b', 'bloom_7b', 'opt_13b', 'gemma_7b', 'qwen1.5_7b', 'yi1.5_6b']:
@@ -54,18 +28,16 @@ def load_model(model_name):
     if 'gptj' in model_name:
         model_kwargs.update(dict(revision='float16'))
     if 'falcon3-3b' in model_name:
-        model_kwargs.update(dict(torch_dtype = torch.float32))
+        model_kwargs.update(dict(torch_dtype=torch.float32))
 
-    model = AutoModelForCausalLM.from_pretrained(model_path, **model_kwargs, device_map="auto")
+    model = AutoModelForCausalLM.from_pretrained(model_fullname, **model_kwargs, device_map="auto", trust_remote_code=True)
     print('Moving model to GPU...', end='', flush=True)
     start = time.time()
-    # model.to(device)
     print(f'DONE ({time.time() - start:.2f}s)')
     return model
 
 def load_tokenizer(model_name):
     model_fullname = model_fullnames[model_name]
-    model_path = "pretrain_models/" + model_fullname
 
     optional_tok_kwargs = {}
     if "opt-" in model_fullname:
@@ -73,7 +45,7 @@ def load_tokenizer(model_name):
         optional_tok_kwargs['fast'] = False
     optional_tok_kwargs['padding_side'] = 'right'
 
-    base_tokenizer = AutoTokenizer.from_pretrained(model_path, **optional_tok_kwargs)
+    base_tokenizer = AutoTokenizer.from_pretrained(model_fullname, **optional_tok_kwargs, trust_remote_code=True)
     if base_tokenizer.pad_token_id is None:
         base_tokenizer.pad_token_id = base_tokenizer.eos_token_id
         if '13b' in model_fullname:

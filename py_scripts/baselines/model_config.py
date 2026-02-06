@@ -1,0 +1,63 @@
+# Centralized model configuration for SpecDetect
+# Maps short model names to HuggingFace Hub IDs
+
+model_fullnames = {
+    'gpt2_xl': 'openai-community/gpt2-xl',
+    'gptneo_2.7b': 'EleutherAI/gpt-neo-2.7B',
+    'opt_2.7b': 'facebook/opt-2.7b',
+    'gptj_6b': 'EleutherAI/gpt-j-6b',
+    'bloom_7b': 'bigscience/bloom-7b1',
+    'falcon_7b': 'tiiuae/falcon-7b',
+    'gemma_7b': 'google/gemma-7b',
+    'llama1_13b': 'huggyllama/llama-13b',
+    'llama2_13b': 'TheBloke/Llama-2-13B-fp16',
+    'llama3_8b': 'meta-llama/Meta-Llama-3-8B',
+    'opt_13b': 'facebook/opt-13b',
+    'phi2': 'microsoft/phi-2',
+    'mgpt': 'ai-forever/mGPT',
+    'qwen1.5_7b': 'Qwen/Qwen1.5-7B',
+    'yi1.5_6b': '01-ai/Yi-1.5-6B',
+    'phi-4': 'microsoft/phi-4',
+    'Qwen3-1.7B': 'Qwen/Qwen3-1.7B',
+    'Qwen3-4B': 'Qwen/Qwen3-4B',
+    'Qwen3-8B': 'Qwen/Qwen3-8B',
+    'falcon3-10b': 'tiiuae/Falcon3-10B-Base',
+    'falcon3-7b': 'tiiuae/Falcon3-7B-Base',
+    'falcon3-3b': 'tiiuae/Falcon3-3B-Base',
+    'gemma3-12b': 'google/gemma-3-12b-pt',
+    'gemma3-1b': 'google/gemma-3-1b-pt',
+    'gemma3-4b': 'google/gemma-3-4b-pt',
+    'falcon_7b_instruct': 'tiiuae/falcon-7b-instruct',
+}
+
+# GPU requirements: number of GPUs needed per model
+# 1 GPU (24GB): models <= ~8B params
+# 2 GPUs (48GB): models ~13B params
+gpu_requirements = {
+    'gpt2_xl': 1,
+    'gptneo_2.7b': 1,
+    'opt_2.7b': 1,
+    'gptj_6b': 1,
+    'bloom_7b': 1,
+    'falcon_7b': 1,
+    'gemma_7b': 1,
+    'llama3_8b': 1,
+    'phi2': 1,
+    'mgpt': 1,
+    'qwen1.5_7b': 1,
+    'yi1.5_6b': 1,
+    'phi-4': 1,
+    'Qwen3-1.7B': 1,
+    'Qwen3-4B': 1,
+    'Qwen3-8B': 1,
+    'falcon3-3b': 1,
+    'falcon3-7b': 1,
+    'falcon3-10b': 1,
+    'gemma3-1b': 1,
+    'gemma3-4b': 1,
+    'llama1_13b': 2,
+    'llama2_13b': 2,
+    'opt_13b': 2,
+    'gemma3-12b': 2,
+    'falcon_7b_instruct': 1,
+}

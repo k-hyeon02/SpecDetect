@@ -12,7 +12,7 @@ from utils.metrics import get_roc_metrics, get_precision_recall_metrics
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from transformers import GPTJConfig, GPTJForCausalLM
 import numpy as np
-from scipy.fftpack import fft,ifft
+from scipy.fft import fft, ifft
 import matplotlib.pyplot as plt
 from matplotlib.pylab import mpl
 import warnings
@@ -26,36 +26,10 @@ warnings.filterwarnings('ignore')
 # os.chdir("......") # cache_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model_fullnames = {  'gptj_6b': 'gpt-j-6b', # https://huggingface.co/EleutherAI/gpt-j-6b/tree/main
-                     'gptneo_2.7b': 'gpt-neo-2.7B', # https://huggingface.co/EleutherAI/gpt-neo-2.7B/tree/main
-                     'gpt2_xl': 'gpt2-xl',# https://huggingface.co/openai-community/gpt2-xl/tree/main
-                     'opt_2.7b': 'opt-2.7b', # https://huggingface.co/facebook/opt-2.7b/tree/main
-                     'bloom_7b': 'bloom-7b1', # https://huggingface.co/bigscience/bloom-7b1/tree/main
-                     'falcon_7b': 'falcon-7b', # https://huggingface.co/tiiuae/falcon-7b/tree/main
-                     'gemma_7b': "gemma-7b", # https://huggingface.co/google/gemma-7b/tree/main
-                     'llama1_13b': 'Llama-13b', # https://huggingface.co/huggyllama/llama-13b/tree/main
-                     'llama2_13b': 'Llama-2-13B-fp16', # https://huggingface.co/TheBloke/Llama-2-13B-fp16/tree/main
-                    #  'llama3_8b': 'meta-llama/Meta-Llama-3-8B-Instruct', # https://huggingface.co/meta-llama/Meta-Llama-3-8B/tree/main
-                     'llama3_8b': 'Llama-3-8B', # https://huggingface.co/meta-llama/Meta-Llama-3-8B/tree/main
-                     'opt_13b': 'opt-13b', # https://huggingface.co/facebook/opt-13b/tree/main
-                     'phi2': 'phi-2', # https://huggingface.co/microsoft/phi-2/tree/main
-                     "mgpt": 'mGPT', # https://huggingface.co/ai-forever/mGPT/tree/main
-                     'qwen1.5_7b': 'Qwen1.5-7B', # https://huggingface.co/Qwen/Qwen1.5-7B/tree/main
-                     'yi1.5_6b': 'Yi-1.5-6B',
-                      'phi-4': 'phi-4',
-                     'Qwen3-1.7B': 'Qwen3-1.7B',
-                     'Qwen3-4B': 'Qwen3-4B',
-                     'Qwen3-8B': 'Qwen3-8B',
-                      'falcon3-10b': 'falcon3-10b',
-                     'falcon3-7b': 'falcon3-7b',
-                     'gemma3-12b': 'gemma3-12b',
-                     'gemma3-1b': 'gemma3-1b',
-                     'gemma3-4b': 'gemma3-4b',
-                     'falcon3-3b': 'falcon3-3b'} # https://huggingface.co/01-ai/Yi-1.5-6B/tree/main 
+from model_config import model_fullnames
 
 def load_model(model_name):
     model_fullname = model_fullnames[model_name]
-    model_path = "pretrain_models/" + model_fullname
     print(f'Loading model {model_fullname}...')
     model_kwargs = {}
     if model_name in ['gptj_6b', 'llama1_13b', 'llama2_13b', 'llama3_8b', 'falcon_7b', 'bloom_7b', 'opt_13b', 'gemma_7b', 'qwen1.5_7b', 'yi1.5_6b']:
@@ -63,9 +37,9 @@ def load_model(model_name):
     if 'gptj' in model_name:
         model_kwargs.update(dict(revision='float16'))
     if 'falcon3-3b' in model_name:
-        model_kwargs.update(dict(torch_dtype = torch.float32))
+        model_kwargs.update(dict(torch_dtype=torch.float32))
 
-    model = AutoModelForCausalLM.from_pretrained(model_path, **model_kwargs, device_map="auto")
+    model = AutoModelForCausalLM.from_pretrained(model_fullname, **model_kwargs, device_map="auto", trust_remote_code=True)
     print('Moving model to GPU...', end='', flush=True)
     start = time.time()
     print(f'DONE ({time.time() - start:.2f}s)')
@@ -74,15 +48,13 @@ def load_model(model_name):
 def load_tokenizer(model_name):
     model_fullname = model_fullnames[model_name]
 
-    model_path = "pretrain_models/" + model_fullname
-
     optional_tok_kwargs = {}
     if "opt-" in model_fullname:
         print("Using non-fast tokenizer for OPT")
         optional_tok_kwargs['fast'] = False
     optional_tok_kwargs['padding_side'] = 'right'
 
-    base_tokenizer = AutoTokenizer.from_pretrained(model_path, **optional_tok_kwargs)
+    base_tokenizer = AutoTokenizer.from_pretrained(model_fullname, **optional_tok_kwargs, trust_remote_code=True)
     if base_tokenizer.pad_token_id is None:
         base_tokenizer.pad_token_id = base_tokenizer.eos_token_id
         if '13b' in model_fullname:
@@ -203,7 +175,7 @@ def get_log_likelihood(logits_score, labels):
 
 
 def get_freq_features(log_likelihood):
-    
+
     log_likelihood = np.swapaxes(log_likelihood, 0, 2)  # 先交换第0和第3维
     log_likelihood = np.squeeze(log_likelihood, axis=-1)
 
@@ -219,6 +191,107 @@ def get_freq_features(log_likelihood):
     energy_total = np.sum(power_half_y, axis=1)
 
     return -energy_total
+
+
+def visualize_fft_stft(log_likelihood_human, log_likelihood_llm, save_dir, dataset_name, model_name, sample_idx=0):
+    """Visualize FFT and STFT results for a single human vs LLM sample pair and save as PNG."""
+    os.makedirs(save_dir, exist_ok=True)
+
+    # Prepare 1D signals (take the first sample from the batch)
+    human_signal = log_likelihood_human.squeeze()
+    llm_signal = log_likelihood_llm.squeeze()
+
+    # Zero-mean
+    human_signal = human_signal - np.mean(human_signal)
+    llm_signal = llm_signal - np.mean(llm_signal)
+
+    N_h = len(human_signal)
+    N_l = len(llm_signal)
+
+    # --- FFT ---
+    fft_human = fft(human_signal)
+    fft_llm = fft(llm_signal)
+
+    power_human = (np.abs(fft_human[:N_h // 2]) / N_h) ** 2
+    power_llm = (np.abs(fft_llm[:N_l // 2]) / N_l) ** 2
+
+    freq_human = np.arange(N_h // 2) / N_h
+    freq_llm = np.arange(N_l // 2) / N_l
+
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    fig.suptitle(f'FFT & STFT Analysis: {dataset_name} / {model_name} (sample #{sample_idx})', fontsize=14)
+
+    # FFT power spectrum
+    axes[0, 0].plot(freq_human, power_human, color='blue', alpha=0.7, label='Human')
+    axes[0, 0].set_title('FFT Power Spectrum - Human')
+    axes[0, 0].set_xlabel('Normalized Frequency')
+    axes[0, 0].set_ylabel('Power')
+    axes[0, 0].legend()
+    axes[0, 0].grid(True, alpha=0.3)
+
+    axes[0, 1].plot(freq_llm, power_llm, color='red', alpha=0.7, label='LLM')
+    axes[0, 1].set_title('FFT Power Spectrum - LLM')
+    axes[0, 1].set_xlabel('Normalized Frequency')
+    axes[0, 1].set_ylabel('Power')
+    axes[0, 1].legend()
+    axes[0, 1].grid(True, alpha=0.3)
+
+    # --- STFT ---
+    nperseg = min(32, N_h // 2, N_l // 2)
+    if nperseg >= 4:
+        f_h, t_h, Zxx_h = stft(human_signal, nperseg=nperseg, noverlap=nperseg // 2)
+        f_l, t_l, Zxx_l = stft(llm_signal, nperseg=nperseg, noverlap=nperseg // 2)
+
+        axes[1, 0].pcolormesh(t_h, f_h, np.abs(Zxx_h), shading='gouraud', cmap='viridis')
+        axes[1, 0].set_title('STFT Spectrogram - Human')
+        axes[1, 0].set_xlabel('Time (token index)')
+        axes[1, 0].set_ylabel('Frequency')
+
+        axes[1, 1].pcolormesh(t_l, f_l, np.abs(Zxx_l), shading='gouraud', cmap='viridis')
+        axes[1, 1].set_title('STFT Spectrogram - LLM')
+        axes[1, 1].set_xlabel('Time (token index)')
+        axes[1, 1].set_ylabel('Frequency')
+    else:
+        axes[1, 0].text(0.5, 0.5, 'Sequence too short for STFT', ha='center', va='center', transform=axes[1, 0].transAxes)
+        axes[1, 1].text(0.5, 0.5, 'Sequence too short for STFT', ha='center', va='center', transform=axes[1, 1].transAxes)
+
+    plt.tight_layout()
+    png_path = os.path.join(save_dir, f'fft_stft_{dataset_name}_{model_name}_sample{sample_idx}.png')
+    plt.savefig(png_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+    print(f'FFT/STFT visualization saved to {png_path}')
+    return png_path
+
+
+def visualize_fft_overlay(all_human_energies, all_llm_energies, save_dir, dataset_name, model_name):
+    """Visualize overlaid FFT power spectra distributions for all human vs LLM samples."""
+    os.makedirs(save_dir, exist_ok=True)
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    fig.suptitle(f'FFT Energy Distribution: {dataset_name} / {model_name}', fontsize=14)
+
+    # Histogram of total FFT energy
+    axes[0].hist(all_human_energies, bins=30, alpha=0.6, color='blue', label='Human', density=True)
+    axes[0].hist(all_llm_energies, bins=30, alpha=0.6, color='red', label='LLM', density=True)
+    axes[0].set_title('FFT Total Energy Distribution')
+    axes[0].set_xlabel('Negative Total Energy')
+    axes[0].set_ylabel('Density')
+    axes[0].legend()
+    axes[0].grid(True, alpha=0.3)
+
+    # Box plot comparison
+    axes[1].boxplot([all_human_energies, all_llm_energies], labels=['Human', 'LLM'],
+                    patch_artist=True, boxprops=dict(facecolor='lightblue'))
+    axes[1].set_title('FFT Energy Box Plot')
+    axes[1].set_ylabel('Negative Total Energy')
+    axes[1].grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    png_path = os.path.join(save_dir, f'fft_energy_dist_{dataset_name}_{model_name}.png')
+    plt.savefig(png_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+    print(f'FFT energy distribution saved to {png_path}')
+    return png_path
 
 def experiment(args):
     # load model
@@ -287,8 +360,30 @@ def experiment(args):
     fpr, tpr, roc_auc = get_roc_metrics(predictions['real'], predictions['samples'])
     p, r, pr_auc = get_precision_recall_metrics(predictions['real'], predictions['samples'])
     print(f"Criterion {name}_threshold ROC AUC: {roc_auc:.4f}, PR AUC: {pr_auc:.4f}")
-    
-    results = {'dataset':args.dataset_file.split("/")[-1],
+
+    # --- FFT/STFT Visualization ---
+    dataset_name = args.dataset_file.split("/")[-1]
+    viz_dir = os.path.join(os.path.dirname(args.output_file) if args.output_file else '.', 'visualizations')
+    # Visualize first 3 samples as individual FFT/STFT plots
+    viz_count = min(3, len(data["original"]))
+    for viz_idx in range(viz_count):
+        orig_text = data["original"][viz_idx]
+        samp_text = data["sampled"][viz_idx]
+        tokenized_orig = scoring_tokenizer(orig_text, return_tensors="pt", padding=True, return_token_type_ids=False).to(device)
+        tokenized_samp = scoring_tokenizer(samp_text, return_tensors="pt", padding=True, return_token_type_ids=False).to(device)
+        with torch.no_grad():
+            logits_orig = scoring_model(**tokenized_orig).logits[:, :-1]
+            logits_samp = scoring_model(**tokenized_samp).logits[:, :-1]
+            labels_orig = tokenized_orig.input_ids[:, 1:]
+            labels_samp = tokenized_samp.input_ids[:, 1:]
+            ll_orig = get_likelihood(logits_orig, labels_orig).cpu().numpy().squeeze()
+            ll_samp = get_likelihood(logits_samp, labels_samp).cpu().numpy().squeeze()
+        visualize_fft_stft(ll_orig, ll_samp, viz_dir, dataset_name, args.scoring_model_name, sample_idx=viz_idx)
+
+    # Overlay distribution plot using criterion scores
+    visualize_fft_overlay(predictions['real'], predictions['samples'], viz_dir, dataset_name, args.scoring_model_name)
+
+    results = {'dataset':dataset_name,
         'model':args.reference_model_name,
         'feature index': name,
         'auc':round(roc_auc,4),
