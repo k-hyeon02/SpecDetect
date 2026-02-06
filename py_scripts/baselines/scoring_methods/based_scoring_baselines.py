@@ -95,9 +95,7 @@ def get_specdetect(logits, labels):
     lprobs = torch.log_softmax(logits, dim=-1)
     log_likelihood = lprobs.gather(dim=-1, index=labels)
 
-    log_likelihood = log_likelihood - np.mean(log_likelihood, axis=1, keepdims=True)
-    # log_likelihood = log_likelihood.squeeze(-1)  # remove the last dimension
-    log_likelihood -= log_likelihood.mean(dim=1)
+    log_likelihood = log_likelihood - log_likelihood.mean(dim=1, keepdim=True)
 
     N = log_likelihood.shape[1]
 
@@ -108,4 +106,4 @@ def get_specdetect(logits, labels):
 
     energy_total = np.sum(power_half_y, axis=1)
 
-    return -energy_total
+    return -energy_total.item()
