@@ -24,11 +24,11 @@ def load_model(model_name):
 
     model_kwargs = {}
     if model_name in ['gptj_6b', 'llama1_13b', 'llama2_13b', 'llama3_8b', 'falcon_7b', 'bloom_7b', 'opt_13b', 'gemma_7b', 'qwen1.5_7b', 'yi1.5_6b']:
-        model_kwargs.update(dict(torch_dtype=torch.float16))
+        model_kwargs.update(dict(dtype=torch.float16))
     if 'gptj' in model_name:
         model_kwargs.update(dict(revision='float16'))
     if 'falcon3-3b' in model_name:
-        model_kwargs.update(dict(torch_dtype=torch.float32))
+        model_kwargs.update(dict(dtype=torch.float32))
 
     model = AutoModelForCausalLM.from_pretrained(model_fullname, **model_kwargs, device_map="auto", trust_remote_code=True)
     print('Moving model to GPU...', end='', flush=True)
