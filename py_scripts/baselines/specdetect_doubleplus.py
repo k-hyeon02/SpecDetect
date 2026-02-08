@@ -146,7 +146,7 @@ def get_sampling_discrepancy_frequency(logits_ref, logits_score, labels, args):
     sigma_tilde = sampled_lastde.std(axis=0)
     discrepancy = (lastde_x - miu_tilde) / sigma_tilde
 
-    return discrepancy.cpu().item()
+    return discrepancy.item()
 
 def get_log_likelihood(logits_score, labels):
     # assert logits_ref.shape[0] == 1
