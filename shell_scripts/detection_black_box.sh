@@ -12,7 +12,7 @@
 
 # Setup environment
 echo "$(date), Setup the environment ..."
-set -e
+set -e  # Fail on setup errors
 
 source $(conda info --base)/etc/profile.d/conda.sh
 conda activate specdetect
@@ -41,6 +41,9 @@ dnagpt_results_path=experiment_results/dna_gpt_detection_results
 fast_detectgpt_detection_results_path=experiment_results/fast_detectgpt_detection_results
 lastde_doubleplus_detection_results_path=experiment_results/lastde_doubleplus_detection_results
 specdetect_doubleplus_detection_results_path=experiment_results/specdetect_detection_results
+
+# Disable set -e for experiments so individual failures don't kill the whole job
+set +e
 
 # Black-box: proxy model gptj_6b used for all scoring
 # Includes open-source + closed-source model datasets

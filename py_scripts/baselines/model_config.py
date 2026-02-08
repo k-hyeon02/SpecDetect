@@ -30,6 +30,10 @@ model_fullnames = {
     'falcon_7b_instruct': 'tiiuae/falcon-7b-instruct',
 }
 
+# Models that must NOT use trust_remote_code=True
+# (their legacy custom code is incompatible with transformers 5.x)
+no_remote_code = {'falcon_7b', 'falcon_7b_instruct'}
+
 # GPU requirements: number of GPUs needed per model
 # 1 GPU (24GB): models <= ~8B params
 # 2 GPUs (48GB): models ~13B params

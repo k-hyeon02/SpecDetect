@@ -12,7 +12,7 @@
 
 # Setup environment
 echo "$(date), Setup the environment (13B models, 2 GPUs) ..."
-set -e
+set -e  # Fail on setup errors
 
 source $(conda info --base)/etc/profile.d/conda.sh
 conda activate specdetect
@@ -24,6 +24,9 @@ mkdir -p experiment_results/statistic_detection_results/white
 mkdir -p experiment_results/fast_detectgpt_detection_results/white
 mkdir -p experiment_results/lastde_doubleplus_detection_results/white
 mkdir -p experiment_results/specdetect_detection_results/white
+
+# Disable set -e for experiments so individual failures don't kill the whole job
+set +e
 
 datasets_path=datasets/human_llm_data_for_experiment
 statistic_detection_results_path=experiment_results/statistic_detection_results

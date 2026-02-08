@@ -15,7 +15,7 @@ warnings.filterwarnings('ignore')
 # os.chdir("......") # cache_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-from model_config import model_fullnames
+from model_config import model_fullnames, no_remote_code
 
 def load_model(model_name):
     huggingface_config = {
@@ -24,7 +24,7 @@ def load_model(model_name):
     model_fullname = model_fullnames[model_name]
     print(f'Loading model {model_fullname}...')
 
-    model = AutoModelForCausalLM.from_pretrained(model_fullname, dtype=torch.bfloat16, token=huggingface_config["TOKEN"], device_map="auto", trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained(model_fullname, dtype=torch.bfloat16, token=huggingface_config["TOKEN"], device_map="auto", trust_remote_code=model_name not in no_remote_code)
     print('Moving model to GPU...', end='', flush=True)
     start = time.time()
     print(f'DONE ({time.time() - start:.2f}s)')
@@ -33,7 +33,7 @@ def load_model(model_name):
 def load_tokenizer(model_name):
     model_fullname = model_fullnames[model_name]
 
-    tokenizer = AutoTokenizer.from_pretrained(model_fullname, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_fullname, trust_remote_code=model_name not in no_remote_code)
     if not tokenizer.pad_token:
         tokenizer.pad_token = tokenizer.eos_token
     return tokenizer

@@ -12,7 +12,7 @@
 
 # Setup environment
 echo "$(date), Setup the environment ..."
-set -e
+set -e  # Fail on setup errors
 
 # Activate conda environment
 source $(conda info --base)/etc/profile.d/conda.sh
@@ -44,6 +44,9 @@ dnagpt_results_path=experiment_results/dna_gpt_detection_results
 fast_detectgpt_detection_results_path=experiment_results/fast_detectgpt_detection_results
 lastde_doubleplus_detection_results_path=experiment_results/lastde_doubleplus_detection_results
 specdetect_doubleplus_detection_results_path=experiment_results/specdetect_detection_results
+
+# Disable set -e for experiments so individual failures don't kill the whole job
+set +e
 
 # White-box: source model = scoring model (open-source models only)
 # Models with datasets available (1 GPU models)

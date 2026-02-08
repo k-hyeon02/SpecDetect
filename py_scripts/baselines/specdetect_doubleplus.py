@@ -26,7 +26,7 @@ warnings.filterwarnings('ignore')
 # os.chdir("......") # cache_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-from model_config import model_fullnames
+from model_config import model_fullnames, no_remote_code
 
 def load_model(model_name):
     model_fullname = model_fullnames[model_name]
@@ -39,7 +39,7 @@ def load_model(model_name):
     if 'falcon3-3b' in model_name:
         model_kwargs.update(dict(dtype=torch.float32))
 
-    model = AutoModelForCausalLM.from_pretrained(model_fullname, **model_kwargs, device_map="auto", trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained(model_fullname, **model_kwargs, device_map="auto", trust_remote_code=model_name not in no_remote_code)
     print('Moving model to GPU...', end='', flush=True)
     start = time.time()
     print(f'DONE ({time.time() - start:.2f}s)')
@@ -54,7 +54,7 @@ def load_tokenizer(model_name):
         optional_tok_kwargs['fast'] = False
     optional_tok_kwargs['padding_side'] = 'right'
 
-    base_tokenizer = AutoTokenizer.from_pretrained(model_fullname, **optional_tok_kwargs, trust_remote_code=True)
+    base_tokenizer = AutoTokenizer.from_pretrained(model_fullname, **optional_tok_kwargs, trust_remote_code=model_name not in no_remote_code)
     if base_tokenizer.pad_token_id is None:
         base_tokenizer.pad_token_id = base_tokenizer.eos_token_id
         if '13b' in model_fullname:
