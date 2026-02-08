@@ -16,6 +16,7 @@ from scipy.fft import fft, ifft
 import matplotlib.pyplot as plt
 from matplotlib.pylab import mpl
 import warnings
+import csv
 from sklearn.preprocessing import MinMaxScaler
 import scipy
 from scipy.signal import stft
@@ -389,6 +390,15 @@ def experiment(args):
         'auc':round(roc_auc,4),
         'prauc':round(pr_auc,4),
         'n_samples': args.n_samples}
+
+    results_file = f'{args.output_file}/{name}.csv'
+    os.makedirs(os.path.dirname(results_file), exist_ok=True)
+    with open(results_file, 'a', newline='') as fout:
+        writer = csv.DictWriter(fout, fieldnames=results.keys())
+        if fout.tell() == 0:
+            writer.writeheader()
+        writer.writerow(results)
+        print(f'Results appended to {results_file}')
 
 
 if __name__ == '__main__':
