@@ -274,8 +274,8 @@ def visualize_fft_overlay(all_human_energies, all_llm_energies, save_dir, datase
     # Histogram of total FFT energy
     axes[0].hist(all_human_energies, bins=30, alpha=0.6, color='blue', label='Human', density=True)
     axes[0].hist(all_llm_energies, bins=30, alpha=0.6, color='red', label='LLM', density=True)
-    axes[0].set_title('FFT Total Energy Distribution')
-    axes[0].set_xlabel('Negative Total Energy')
+    axes[0].set_title('Sampling Discrepancy Distribution')
+    axes[0].set_xlabel('Sampling Discrepancy (z-score)')
     axes[0].set_ylabel('Density')
     axes[0].legend()
     axes[0].grid(True, alpha=0.3)
@@ -283,8 +283,8 @@ def visualize_fft_overlay(all_human_energies, all_llm_energies, save_dir, datase
     # Box plot comparison
     axes[1].boxplot([all_human_energies, all_llm_energies], labels=['Human', 'LLM'],
                     patch_artist=True, boxprops=dict(facecolor='lightblue'))
-    axes[1].set_title('FFT Energy Box Plot')
-    axes[1].set_ylabel('Negative Total Energy')
+    axes[1].set_title('Sampling Discrepancy Box Plot')
+    axes[1].set_ylabel('Sampling Discrepancy (z-score)')
     axes[1].grid(True, alpha=0.3)
 
     plt.tight_layout()
