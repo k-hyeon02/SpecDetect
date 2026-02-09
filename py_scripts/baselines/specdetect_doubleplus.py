@@ -281,7 +281,7 @@ def visualize_fft_overlay(all_human_energies, all_llm_energies, save_dir, datase
     axes[0].grid(True, alpha=0.3)
 
     # Box plot comparison
-    axes[1].boxplot([all_human_energies, all_llm_energies], labels=['Human', 'LLM'],
+    axes[1].boxplot([all_human_energies, all_llm_energies], tick_labels=['Human', 'LLM'],
                     patch_artist=True, boxprops=dict(facecolor='lightblue'))
     axes[1].set_title('Sampling Discrepancy Box Plot')
     axes[1].set_ylabel('Sampling Discrepancy (z-score)')
@@ -399,6 +399,14 @@ def experiment(args):
             writer.writeheader()
         writer.writerow(results)
         print(f'Results appended to {results_file}')
+
+    # Save per-sample predictions to JSON for standalone visualization
+    json_file = os.path.join(viz_dir, f'predictions_{dataset_name}_{args.scoring_model_name}.json')
+    with open(json_file, 'w') as f:
+        json.dump({'dataset': dataset_name, 'model': args.scoring_model_name,
+                   'real': predictions['real'], 'samples': predictions['samples'],
+                   'roc_auc': roc_auc, 'pr_auc': pr_auc}, f)
+        print(f'Predictions saved to {json_file}')
 
 
 if __name__ == '__main__':
