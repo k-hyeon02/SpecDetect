@@ -86,7 +86,7 @@ pip install -r requirements.txt
 
 ### Verified Environment
 - Python 3.12, PyTorch 2.6.0+cu124, Transformers 5.x
-- SLURM cluster: `sichpc` partition, nodes with 2x RTX 3090 (24GB each)
+- SLURM cluster: 2x RTX 3090 (24GB each)
 
 ## Supported Models
 
