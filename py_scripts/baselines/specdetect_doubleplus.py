@@ -222,11 +222,14 @@ def visualize_fft_stft(log_likelihood_human, log_likelihood_llm, save_dir, datas
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     fig.suptitle(f'FFT & STFT Analysis: {dataset_name} / {model_name} (sample #{sample_idx})', fontsize=14)
 
-    # FFT power spectrum
+    # FFT power spectrum (shared Y-axis scale)
+    fft_ymax = max(power_human.max(), power_llm.max()) * 1.1
+
     axes[0, 0].plot(freq_human, power_human, color='blue', alpha=0.7, label='Human')
     axes[0, 0].set_title('FFT Power Spectrum - Human')
     axes[0, 0].set_xlabel('Normalized Frequency')
     axes[0, 0].set_ylabel('Power')
+    axes[0, 0].set_ylim(0, fft_ymax)
     axes[0, 0].legend()
     axes[0, 0].grid(True, alpha=0.3)
 
@@ -234,24 +237,30 @@ def visualize_fft_stft(log_likelihood_human, log_likelihood_llm, save_dir, datas
     axes[0, 1].set_title('FFT Power Spectrum - LLM')
     axes[0, 1].set_xlabel('Normalized Frequency')
     axes[0, 1].set_ylabel('Power')
+    axes[0, 1].set_ylim(0, fft_ymax)
     axes[0, 1].legend()
     axes[0, 1].grid(True, alpha=0.3)
 
-    # --- STFT ---
+    # --- STFT (shared color scale) ---
     nperseg = min(32, N_h // 2, N_l // 2)
     if nperseg >= 4:
         f_h, t_h, Zxx_h = stft(human_signal, nperseg=nperseg, noverlap=nperseg // 2)
         f_l, t_l, Zxx_l = stft(llm_signal, nperseg=nperseg, noverlap=nperseg // 2)
 
-        axes[1, 0].pcolormesh(t_h, f_h, np.abs(Zxx_h), shading='gouraud', cmap='viridis')
+        vmin = 0
+        vmax = max(np.abs(Zxx_h).max(), np.abs(Zxx_l).max())
+
+        im_h = axes[1, 0].pcolormesh(t_h, f_h, np.abs(Zxx_h), shading='gouraud', cmap='viridis', vmin=vmin, vmax=vmax)
         axes[1, 0].set_title('STFT Spectrogram - Human')
         axes[1, 0].set_xlabel('Time (token index)')
         axes[1, 0].set_ylabel('Frequency')
+        fig.colorbar(im_h, ax=axes[1, 0])
 
-        axes[1, 1].pcolormesh(t_l, f_l, np.abs(Zxx_l), shading='gouraud', cmap='viridis')
+        im_l = axes[1, 1].pcolormesh(t_l, f_l, np.abs(Zxx_l), shading='gouraud', cmap='viridis', vmin=vmin, vmax=vmax)
         axes[1, 1].set_title('STFT Spectrogram - LLM')
         axes[1, 1].set_xlabel('Time (token index)')
         axes[1, 1].set_ylabel('Frequency')
+        fig.colorbar(im_l, ax=axes[1, 1])
     else:
         axes[1, 0].text(0.5, 0.5, 'Sequence too short for STFT', ha='center', va='center', transform=axes[1, 0].transAxes)
         axes[1, 1].text(0.5, 0.5, 'Sequence too short for STFT', ha='center', va='center', transform=axes[1, 1].transAxes)
