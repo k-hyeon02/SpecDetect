@@ -146,4 +146,65 @@ for D in $datasets; do
   done
 done
 
+# ============================================================
+# Non-English / Cross-language robustness evaluation
+# ============================================================
+multi_lang_path=datasets/multi_language_data
+
+# economy_chinese with qwen1.5_7b
+if [ -f "${multi_lang_path}/economy_chinese_qwen1.5_7b.raw_data.json" ]; then
+  echo "$(date), Statistic detect economy_chinese_qwen1.5_7b ..."
+  python py_scripts/baselines/statistic_detect.py \
+    --dataset_file ${multi_lang_path}/economy_chinese_qwen1.5_7b \
+    --output_file ${statistic_detection_results_path}/${scenarios} \
+    --scoring_model_name qwen1.5_7b
+
+  echo "$(date), Fast-DetectGPT economy_chinese_qwen1.5_7b ..."
+  python py_scripts/baselines/fast_detect_gpt.py \
+    --dataset_file ${multi_lang_path}/economy_chinese_qwen1.5_7b \
+    --output_file ${fast_detectgpt_detection_results_path}/${scenarios} \
+    --reference_model_name qwen1.5_7b --scoring_model_name qwen1.5_7b
+
+  echo "$(date), Lastde++ economy_chinese_qwen1.5_7b ..."
+  python py_scripts/baselines/lastde_doubleplus.py \
+    --dataset_file ${multi_lang_path}/economy_chinese_qwen1.5_7b \
+    --output_file ${lastde_doubleplus_detection_results_path}/${scenarios} \
+    --reference_model_name qwen1.5_7b --scoring_model_name qwen1.5_7b \
+    --embed_size 4 --epsilon 8 --tau_prime 15
+
+  echo "$(date), SpecDetect++ economy_chinese_qwen1.5_7b ..."
+  python py_scripts/baselines/specdetect_doubleplus.py \
+    --dataset_file ${multi_lang_path}/economy_chinese_qwen1.5_7b \
+    --output_file ${specdetect_doubleplus_detection_results_path}/${scenarios} \
+    --reference_model_name qwen1.5_7b --scoring_model_name qwen1.5_7b
+fi
+
+# wmt16_english with mgpt
+if [ -f "${multi_lang_path}/wmt16_english_mgpt.raw_data.json" ]; then
+  echo "$(date), Statistic detect wmt16_english_mgpt ..."
+  python py_scripts/baselines/statistic_detect.py \
+    --dataset_file ${multi_lang_path}/wmt16_english_mgpt \
+    --output_file ${statistic_detection_results_path}/${scenarios} \
+    --scoring_model_name mgpt
+
+  echo "$(date), Fast-DetectGPT wmt16_english_mgpt ..."
+  python py_scripts/baselines/fast_detect_gpt.py \
+    --dataset_file ${multi_lang_path}/wmt16_english_mgpt \
+    --output_file ${fast_detectgpt_detection_results_path}/${scenarios} \
+    --reference_model_name mgpt --scoring_model_name mgpt
+
+  echo "$(date), Lastde++ wmt16_english_mgpt ..."
+  python py_scripts/baselines/lastde_doubleplus.py \
+    --dataset_file ${multi_lang_path}/wmt16_english_mgpt \
+    --output_file ${lastde_doubleplus_detection_results_path}/${scenarios} \
+    --reference_model_name mgpt --scoring_model_name mgpt \
+    --embed_size 4 --epsilon 8 --tau_prime 15
+
+  echo "$(date), SpecDetect++ wmt16_english_mgpt ..."
+  python py_scripts/baselines/specdetect_doubleplus.py \
+    --dataset_file ${multi_lang_path}/wmt16_english_mgpt \
+    --output_file ${specdetect_doubleplus_detection_results_path}/${scenarios} \
+    --reference_model_name mgpt --scoring_model_name mgpt
+fi
+
 echo "$(date), Black-box experiments completed!"

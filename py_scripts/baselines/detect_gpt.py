@@ -85,7 +85,7 @@ def experiment(args):
     
     # Evaluate
     results = data
-    # time1 = time.time()
+    time1 = time.time()
     for idx in tqdm(range(n_samples), desc=f"Computing {name} criterion"):
         original_text = results[idx]["original"]
         sampled_text = results[idx]["sampled"]
@@ -123,9 +123,9 @@ def experiment(args):
         predictions['real'].append((res['original_ll'] - res['perturbed_original_ll']) / res['perturbed_original_ll_std'])
         predictions['samples'].append((res['sampled_ll'] - res['perturbed_sampled_ll']) / res['perturbed_sampled_ll_std'])
 
-    # time2 = time.time()
-    # time_per_sample_ms = (time2 - time1) / n_samples * 1000
-    # print(f"Time per sample for {name}: {time_per_sample_ms:.2f} ms")
+    time2 = time.time()
+    time_per_sample_ms = (time2 - time1) / n_samples * 1000
+    print(f"Time per sample for {name}: {time_per_sample_ms:.2f} ms")
     print(f"Real mean/std: {np.mean(predictions['real']):.2f}/{np.std(predictions['real']):.2f}, Samples mean/std: {np.mean(predictions['samples']):.2f}/{np.std(predictions['samples']):.2f}")
     fpr, tpr, roc_auc = get_roc_metrics(predictions['real'], predictions['samples'])
     p, r, pr_auc = get_precision_recall_metrics(predictions['real'], predictions['samples'])

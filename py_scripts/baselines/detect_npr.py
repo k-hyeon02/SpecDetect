@@ -119,7 +119,7 @@ def experiment(args):
     np.random.seed(args.seed)
     
     eval_results = []
-    # time1 = time.time()
+    time1 = time.time()
     for idx in tqdm(range(n_samples), desc=f"Computing {name} criterion"):
         original_text = data[idx]["original"]
         sampled_text = data[idx]["sampled"]
@@ -132,9 +132,9 @@ def experiment(args):
                         "original_crit": original_crit,
                         "sampled": sampled_text,
                         "sampled_crit": sampled_crit})
-    # time2 = time.time()
-    # time_per_sample_ms = (time2 - time1) / n_samples* 1000
-    # print(f"Time per sample for {name}: {time_per_sample_ms:.2f} ms")
+    time2 = time.time()
+    time_per_sample_ms = (time2 - time1) / n_samples * 1000
+    print(f"Time per sample for {name}: {time_per_sample_ms:.2f} ms")
 
     # compute prediction scores for real/sampled passages
     predictions = {'real': [x["original_crit"] for x in eval_results],
