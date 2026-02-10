@@ -162,7 +162,8 @@ def experiment(args):
         'model':args.scoring_model_name,
         'feature index': name,
         'auc':round(roc_auc,4),
-        'prauc':round(pr_auc,4)}
+        'prauc':round(pr_auc,4),
+        'time_per_sample_ms':round(time_per_sample_ms,2)}
 
     results_file = f'{args.output_file}/{name}.csv'
     with open(results_file, 'a', newline='') as fout:

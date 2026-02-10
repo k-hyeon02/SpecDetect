@@ -402,7 +402,8 @@ def experiment(args):
         'feature index': name,
         'auc':round(roc_auc,4),
         'prauc':round(pr_auc,4),
-        'n_samples': args.n_samples}
+        'n_samples': args.n_samples,
+        'time_per_sample_ms':round(time_per_sample_ms,2)}
 
     results_file = f'{args.output_file}/{name}.csv'
     os.makedirs(os.path.dirname(results_file), exist_ok=True)
